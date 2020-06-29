@@ -74,12 +74,15 @@ If the `knative-eventing` namespace or the `imc-controller-*` does not exist, us
     This will return the following result:
 
     ```sh
-    NAME                                            READY   STATUS    RESTARTS   AGE
-    eventing-controller-6cdf6ff785-44k98            1/1     Running   0          29m
-    eventing-webhook-6c4f6699d8-qclbx               1/1     Running   0          29m
-    imc-controller-85cdb4946b-h2msj                 1/1     Running   0          13m
-    imc-dispatcher-5f4689d868-fspt6                 1/1     Running   0          13m
-    sources-controller-5847564f4f-z59xc             1/1     Running   0          29m
+    NAME                                    READY   STATUS    RESTARTS   AGE
+    broker-controller-56b4d58667-fm979      1/1     Running   0          4m36s
+    broker-filter-5bdbc8d8dd-kpswx          1/1     Running   0          4m35s
+    broker-ingress-d896b6b46-4nbtr          1/1     Running   0          4m35s
+    eventing-controller-5fc5645584-qvspl    1/1     Running   0          4m36s
+    eventing-webhook-7674b867dc-zw9qh       1/1     Running   0          4m36s
+    imc-controller-6b548d6468-gnbkn         1/1     Running   0          4m35s
+    imc-dispatcher-655cdf6ff6-mkc29         1/1     Running   0          4m35s
+    mt-broker-controller-6d66c4c6f6-xdn7b   1/1     Running   0          4m35s
    ```
 
 ## Setting up Knative Eventing Resources
@@ -111,7 +114,7 @@ In the next section, you will need to verify that the resources you added in thi
 
 ### Validating that the `Broker` is running
 
-The [`Broker`](./broker-trigger.md#broker) ensures that every event sent by event producers arrives at the correct event consumers. The `Broker` was created when you labeled your namespace as ready for eventing, but it is important to verify that your `Broker` is working correctly. In this guide, you will use the default broker.
+The [`Broker`](./broker/README.md#broker) ensures that every event sent by event producers arrives at the correct event consumers. The `Broker` was created when you labeled your namespace as ready for eventing, but it is important to verify that your `Broker` is working correctly. In this guide, you will use the default broker.
 
 1. Run the following command to verify that the `Broker` is in a healthy state:
 
@@ -155,8 +158,8 @@ Your event consumers receive the events sent by event producers. In this step, y
         spec:
           containers:
             - name: event-display
-              # Source code: https://github.com/knative/eventing-contrib/blob/release-0.6/cmd/event_display/main.go
-              image: gcr.io/knative-releases/github.com/knative/eventing-sources/cmd/event_display@sha256:37ace92b63fc516ad4c8331b6b3b2d84e4ab2d8ba898e387c0b6f68f0e3081c4
+              # Source code: https://github.com/knative/eventing-contrib/tree/master/cmd/event_display
+              image: gcr.io/knative-releases/knative.dev/eventing-contrib/cmd/event_display
 
     ---
 
@@ -195,8 +198,8 @@ Your event consumers receive the events sent by event producers. In this step, y
         spec:
           containers:
             - name: event-display
-              # Source code: https://github.com/knative/eventing-contrib/blob/release-0.6/cmd/event_display/main.go
-              image: gcr.io/knative-releases/github.com/knative/eventing-sources/cmd/event_display@sha256:37ace92b63fc516ad4c8331b6b3b2d84e4ab2d8ba898e387c0b6f68f0e3081c4
+              # Source code: https://github.com/knative/eventing-contrib/tree/master/cmd/event_display
+              image: gcr.io/knative-releases/knative.dev/eventing-contrib/cmd/event_display
 
     ---
 
@@ -225,17 +228,16 @@ Your event consumers receive the events sent by event producers. In this step, y
     This lists the `hello-display` and `goodbye-display` consumers that you deployed:
 
     ```sh
-    NAME           DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
-    hello-display    1         1         1            1           26s
-    NAME           DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
-    goodbye-display    1         1         1            1           16s
+    NAME              READY   UP-TO-DATE   AVAILABLE   AGE
+    hello-display     1/1     1            1           26s
+    goodbye-display   1/1     1            1           16s
    ```
 
-    The number of replicas in your **DESIRED** column should match the number of replicas in your **AVAILABLE** column, which might take a few minutes. If after two minutes the numbers do not match, then see the [Debugging Guide](./debugging/README.md) to help troubleshoot the issue.
+    The number of replicas in your **READY** column should match the number of replicas in your **AVAILABLE** column, which might take a few minutes. If after two minutes the numbers do not match, then see the [Debugging Guide](./debugging/README.md) to help troubleshoot the issue.
 
 ### Creating `Triggers`
 
-A [Trigger](./broker-trigger.md#trigger) defines the events that you want each of your event consumers
+A [Trigger](./broker/README.md#trigger) defines the events that you want each of your event consumers
 to receive. Your `Broker` uses triggers to forward events to the right consumers. Each trigger can specify a filter to select relevant events based on the Cloud Event context attributes.
 
 
@@ -341,7 +343,7 @@ Now that you've created the Pod, you can create an event by sending an HTTP requ
   kubectl --namespace event-example attach curl -it
 ```
 
- You have sshed into the Pod, and can now make a HTTP request. A prompt similar to the one below will appear:
+ You have sshed into the Pod, and can now make an HTTP request. A prompt similar to the one below will appear:
 
 ```sh
     Defaulting container name to curl.
@@ -358,7 +360,7 @@ To show the various types of events you can send, you will make three requests:
     curl -v "http://default-broker.event-example.svc.cluster.local" \
       -X POST \
       -H "Ce-Id: say-hello" \
-      -H "Ce-Specversion: 0.3" \
+      -H "Ce-Specversion: 1.0" \
       -H "Ce-Type: greeting" \
       -H "Ce-Source: not-sendoff" \
       -H "Content-Type: application/json" \
@@ -382,7 +384,7 @@ To show the various types of events you can send, you will make three requests:
     curl -v "http://default-broker.event-example.svc.cluster.local" \
       -X POST \
       -H "Ce-Id: say-goodbye" \
-      -H "Ce-Specversion: 0.3" \
+      -H "Ce-Specversion: 1.0" \
       -H "Ce-Type: not-greeting" \
       -H "Ce-Source: sendoff" \
       -H "Content-Type: application/json" \
@@ -405,7 +407,7 @@ To show the various types of events you can send, you will make three requests:
     curl -v "http://default-broker.event-example.svc.cluster.local" \
       -X POST \
       -H "Ce-Id: say-hello-goodbye" \
-      -H "Ce-Specversion: 0.3" \
+      -H "Ce-Specversion: 1.0" \
       -H "Ce-Type: greeting" \
       -H "Ce-Source: sendoff" \
       -H "Content-Type: application/json" \
@@ -442,7 +444,7 @@ After sending events, verify that your events were received by the appropriate `
     ☁️  cloudevents.Event
     Validation: valid
     Context Attributes,
-      specversion: 0.3
+      specversion: 1.0
       type: greeting
       source: not-sendoff
       id: say-hello
@@ -457,7 +459,7 @@ After sending events, verify that your events were received by the appropriate `
     ☁️  cloudevents.Event
     Validation: valid
     Context Attributes,
-      specversion: 0.3
+      specversion: 1.0
       type: greeting
       source: sendoff
       id: say-hello-goodbye
@@ -483,7 +485,7 @@ After sending events, verify that your events were received by the appropriate `
     ☁️  cloudevents.Event
     Validation: valid
     Context Attributes,
-       specversion: 0.3
+       specversion: 1.0
        type: not-greeting
        source: sendoff
        id: say-goodbye
@@ -498,7 +500,7 @@ After sending events, verify that your events were received by the appropriate `
      ☁️  cloudevents.Event
      Validation: valid
      Context Attributes,
-       specversion: 0.3
+       specversion: 1.0
        type: greeting
        source: sendoff
        id: say-hello-goodbye
@@ -531,5 +533,5 @@ This removes the namespace and all of its resources from your cluster.
 
 You've learned the basics of the Knative Eventing workflow. Here are some additional resources to help you continue to build with the Knative Eventing component.
 
-- [Broker and Trigger](./broker-trigger.md)
+- [Broker and Trigger](./broker/README.md)
 - [Eventing with a GitHub source](./samples/github-source/README.md)

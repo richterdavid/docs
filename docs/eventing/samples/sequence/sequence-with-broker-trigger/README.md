@@ -1,10 +1,3 @@
----
-title: "Using Sequence with Broker and Trigger"
-linkTitle: "Using with Broker and Trigger"
-weight: 20
-type: "docs"
----
-
 We are going to create the following logical configuration. We create a
 PingSource, feeding events into the Broker, then we create a `Filter` that
 wires those events into a [`Sequence`](../../../flows/sequence.md) consisting of 3
@@ -122,7 +115,7 @@ spec:
   reply:
     ref:
       kind: Broker
-      apiVersion: eventing.knative.dev/v1beta1
+      apiVersion: eventing.knative.dev/v1
       name: default
 ```
 
@@ -148,7 +141,7 @@ spec:
   jsonData: '{"message": "Hello world!"}'
   sink:
     ref:
-      apiVersion: eventing.knative.dev/v1beta1
+      apiVersion: eventing.knative.dev/v1
       kind: Broker
       name: default
 ```
@@ -167,7 +160,7 @@ kubectl -n default create -f ./ping-source.yaml
 ### Create the Trigger targeting the Sequence
 
 ```yaml
-apiVersion: eventing.knative.dev/v1beta1
+apiVersion: eventing.knative.dev/v1
 kind: Trigger
 metadata:
   name: sequence-trigger
@@ -203,7 +196,7 @@ spec:
       containers:
         - image: gcr.io/knative-releases/knative.dev/eventing-contrib/cmd/appender
 ---
-apiVersion: eventing.knative.dev/v1alpha1
+apiVersion: eventing.knative.dev/v1
 kind: Trigger
 metadata:
   name: display-trigger

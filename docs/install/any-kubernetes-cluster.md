@@ -219,6 +219,37 @@ The following commands install Istio and enable its Knative integration.
 
 {{< /tab >}}
 
+{{% tab name="Kong" %}}
+
+{{% feature-state version="v0.13" state="" %}}
+
+The following commands install Kong and enable its Knative integration.
+
+1. Install Kong Ingress Controller:
+
+   ```bash
+   kubectl apply --filename https://raw.githubusercontent.com/Kong/kubernetes-ingress-controller/0.9.x/deploy/single/all-in-one-dbless.yaml
+   ```
+
+1. To configure Knative Serving to use Kong by default:
+
+    ```bash
+    kubectl patch configmap/config-network \
+      --namespace knative-serving \
+      --type merge \
+      --patch '{"data":{"ingress.class":"kong"}}'
+    ```
+
+1. Fetch the External IP or CNAME:
+
+   ```bash
+   kubectl --namespace kong get service kong-proxy
+   ```
+
+   Save this for configuring DNS below.
+
+{{< /tab >}}
+
 {{% tab name="Kourier" %}}
 
 {{% feature-state version="v0.12" state="alpha" %}}
@@ -228,7 +259,7 @@ The following commands install Kourier and enable its Knative integration.
 1. Install the Knative Kourier controller:
 
    ```bash
-   kubectl apply --filename https://raw.githubusercontent.com/knative/serving/{{< version >}}/third_party/kourier-latest/kourier.yaml
+   kubectl apply --filename {{< artifact repo="net-kourier" file="kourier.yaml" >}}
    ```
 
 1. To configure Knative Serving to use Kourier by default:
@@ -262,7 +293,7 @@ We ship a simple Kubernetes Job called "default domain" that will (see caveats) 
 kubectl apply --filename {{< artifact repo="serving" file="serving-default-domain.yaml" >}}
 ```
 
-**Caveat**: This will only work if the cluster LoadBalancer service exposes an IPv4 address, so it will not work with IPv6 clusters, AWS, or local setups like Minikube.  For these, see "Real DNS" or "Temporary DNS".
+**Caveat**: This will only work if the cluster LoadBalancer service exposes an IPv4 address or hostname, so it will not work with IPv6 clusters or local setups like Minikube.  For these, see "Real DNS" or "Temporary DNS".
 {{< /tab >}}
 
 
@@ -370,7 +401,7 @@ Knative supports automatically provisioning TLS certificates via [cert-manager](
 2. Next, install the component that integrates Knative with cert-manager:
 
     ```bash
-    kubectl apply --filename {{< artifact repo="serving" file="serving-cert-manager.yaml" >}}
+    kubectl apply --filename {{< artifact repo="net-certmanager" file="release.yaml" >}}
     ```
 
 3. Now configure Knative to [automatically configure TLS certificates](../serving/using-auto-tls.md).
@@ -439,13 +470,14 @@ The following commands install the Knative Eventing component.
 1. Install the [Custom Resource Definitions](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/) (aka CRDs):
 
    ```bash
-   kubectl apply --filename {{< artifact repo="eventing" file="eventing-crds.yaml" >}}
+   kubectl apply  --selector knative.dev/crd-install=true \
+   --filename {{< artifact repo="eventing" file="eventing.yaml" >}}
    ```
 
 1. Install the core components of Eventing (see below for optional extensions):
 
    ```bash
-   kubectl apply --filename {{< artifact repo="eventing" file="eventing-core.yaml" >}}
+   kubectl apply --filename {{< artifact repo="eventing" file="eventing.yaml" >}}
    ```
 
 1. Install a default Channel (messaging) layer (alphabetical).
@@ -553,6 +585,34 @@ ConfigMap to specify which configurations are used for which namespaces:
            namespace: knative-eventing
    ```
 
+The referenced `imc-channel` and `kafka-channel` example ConfigMaps would look like:
+   ```yaml
+   apiVersion: v1
+   kind: ConfigMap
+   metadata:
+     name: imc-channel
+     namespace: knative-eventing
+   data:
+     channelTemplateSpec: |
+       apiVersion: messaging.knative.dev/v1beta1
+       kind: InMemoryChannel
+   ---
+   apiVersion: v1
+   kind: ConfigMap
+   metadata:
+     name: kafka-channel
+     namespace: knative-eventing
+   data:
+     channelTemplateSpec: |
+       apiVersion: messaging.knative.dev/v1alpha1
+       kind: KafkaChannel
+       spec:
+         numPartitions: 3
+         replicationFactor: 1
+   ```
+
+_In order to use the KafkaChannel make sure it is installed on the cluster as discussed above._
+
 {{< /tab >}}
 
 {{% tab name="MT-Channel-based" %}}
@@ -596,6 +656,34 @@ ConfigMap to specify which configurations are used for which namespaces:
            name: kafka-channel
            namespace: knative-eventing
    ```
+
+The referenced `imc-channel` and `kafka-channel` example ConfigMaps would look like:
+   ```yaml
+   apiVersion: v1
+   kind: ConfigMap
+   metadata:
+     name: imc-channel
+     namespace: knative-eventing
+   data:
+     channelTemplateSpec: |
+       apiVersion: messaging.knative.dev/v1beta1
+       kind: InMemoryChannel
+   ---
+   apiVersion: v1
+   kind: ConfigMap
+   metadata:
+     name: kafka-channel
+     namespace: knative-eventing
+   data:
+     channelTemplateSpec: |
+       apiVersion: messaging.knative.dev/v1alpha1
+       kind: KafkaChannel
+       spec:
+         numPartitions: 3
+         replicationFactor: 1
+   ```
+
+_In order to use the KafkaChannel make sure it is installed on the cluster as discussed above._
 
 {{< /tab >}}
 
@@ -701,6 +789,20 @@ The following command installs the Apache CouchDB Source:
    ```
 
 To learn more about the Apache CouchDB source, read [our documentation]((https://github.com/knative/eventing-contrib/blob/{{< version >}}/couchdb/README.md)
+
+{{< /tab >}}
+
+{{% tab name="VMware Sources and Bindings" %}}
+
+{{< feature-state version="v0.14" state="alpha" >}}
+
+The following command installs the VMware Sources and Bindings:
+
+   ```bash
+   kubectl apply --filename {{< artifact org="vmware-tanzu" repo="sources-for-knative" file="release.yaml" >}}
+   ```
+
+To learn more about the VMware sources and bindings, try [our samples](https://github.com/vmware-tanzu/sources-for-knative/tree/master/samples/README.md).
 
 {{< /tab >}}
 

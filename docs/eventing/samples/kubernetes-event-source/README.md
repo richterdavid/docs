@@ -1,11 +1,4 @@
----
-title: "Kubernetes event using the API Server Source"
-linkTitle: "Kubernetes event"
-weight: 50
-type: "docs"
----
-
-This example shows how to wire [Kubernetes cluster events](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#event-v1-core),
+This example shows how to wire [Kubernetes cluster events](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#event-v1-core),
 using the API Server Source, for consumption by a function that has been implemented as a Knative Service.
 
 ## Before you begin
@@ -107,7 +100,7 @@ all the YAML files deployed in this sample to point at that namespace.
          kind: Event
      sink:
        ref:
-         apiVersion: eventing.knative.dev/v1alpha1
+         apiVersion: eventing.knative.dev/v1
          kind: Broker
          name: default
    ```
@@ -130,7 +123,7 @@ simple Knative Service that dumps incoming messages to its log and creates a
 1. Create a file named `trigger.yaml` and copy the code block below into it.
 
    ```yaml
-   apiVersion: eventing.knative.dev/v1alpha1
+   apiVersion: eventing.knative.dev/v1
    kind: Trigger
    metadata:
      name: testevents-trigger
@@ -156,7 +149,7 @@ simple Knative Service that dumps incoming messages to its log and creates a
          containers:
            - # This corresponds to
              # https://github.com/knative/eventing-contrib/tree/master/cmd/event_display/main.go
-             image: gcr.io/knative-releases/github.com/knative/eventing-contrib/cmd/event_display
+             image: gcr.io/knative-releases/knative.dev/eventing-contrib/cmd/event_display
    ```
 
 1. If the deployed `ApiServerSource` is pointing at a `Broker` other than

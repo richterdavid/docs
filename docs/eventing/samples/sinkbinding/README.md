@@ -1,10 +1,3 @@
----
-title: "Sink Binding Example"
-linkTitle: "Sink Binding"
-weight: 10
-type: "docs"
----
-
 A SinkBinding is responsible for linking together "addressable" Kubernetes
 resources that may receive events (aka the event "sink") with Kubernetes
 resources that embed a PodSpec (as `spec.template.spec`) and want to produce
@@ -58,7 +51,7 @@ spec:
   template:
     spec:
       containers:
-        - image: gcr.io/knative-releases/github.com/knative/eventing-contrib/cmd/event_display
+        - image: gcr.io/knative-releases/knative.dev/eventing-contrib/cmd/event_display
 ```
 
 Use following command to create the service from `service.yaml`:

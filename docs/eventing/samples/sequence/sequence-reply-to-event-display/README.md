@@ -1,10 +1,3 @@
----
-title: "Sequence wired to event-display"
-linkTitle: "Displaying sequence output"
-weight: 20
-type: "docs"
----
-
 We are going to create the following logical configuration. We create a
 PingSource, feeding events to a [`Sequence`](../../../flows/sequence.md), then
 taking the output of that `Sequence` and displaying the resulting output.
@@ -132,7 +125,7 @@ spec:
   template:
     spec:
       containers:
-        - image: gcr.io/knative-releases/knative.dev/eventing-sources/cmd/event_display
+        - image: gcr.io/knative-releases/knative.dev/eventing-contrib/cmd/event_display
 ```
 
 Change `default` below to create the `Sequence` in the Namespace where you want
